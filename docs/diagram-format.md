@@ -1,152 +1,67 @@
----
-title: diagram.json File Format
-sidebar_label: diagram.json
-description: Reference guide for the `diagram.json` file for Wokwi simulation projects. This file defines components, their attributes, layout positions, and the connections between them.
-keywords: [diagram.json, connections, wiring, component layout, virtual hardware, ESP32, STM32, Arduino, wire placement, simulation diagram, simulation editor]
----
-
-Each simulation project contains a diagram.json file. This file defines the components
-that will be used for the simulation, their properties, and the connections between the
-components.
-
-## File structure
-
-The diagram file is a JSON file with several sections. The basic file structure is as
-follows:
-
-```json
 {
   "version": 1,
-  "author": "Uri Shaked",
-  "editor": "wokwi",
-  "parts": [],
-  "connections": []
+  "author": "Gemini Buildathon Assistant",
+  "editor": "Wokwi",
+  "parts": [
+    { "type": "wokwi-esp32-devkit-v1", "id": "esp", "top": 0, "left": 0 },
+    {
+      "type": "wokwi-dht22",
+      "id": "dht1",
+      "top": -90,
+      "left": 170,
+      "attrs": { "temperature": "21.5", "humidity": "60" }
+    },
+    {
+      "type": "wokwi-mq135",
+      "id": "mq1",
+      "top": -12,
+      "left": 170,
+      "attrs": { "label": "Air Quality (VOC/Gas)" }
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "pot1",
+      "top": 72,
+      "left": 170,
+      "attrs": { "label": "EMF/Radiation (Proxy)" }
+    },
+    {
+      "type": "wokwi-rgb-led",
+      "id": "rgb1",
+      "top": -85,
+      "left": -120,
+      "attrs": { "common": "cathode", "type": "RGB" }
+    },
+    { "type": "wokwi-resistor", "id": "r1", "top": -40, "left": -150, "attrs": { "value": "220" } },
+    { "type": "wokwi-resistor", "id": "r2", "top": -40, "left": -115, "attrs": { "value": "220" } },
+    { "type": "wokwi-resistor", "id": "r3", "top": -40, "left": -80, "attrs": { "value": "220" } },
+    {
+      "type": "wokwi-piezo-buzzer",
+      "id": "bz1",
+      "top": 30,
+      "left": -100,
+      "attrs": { "label": "Audible Alarm" }
+    }
+  ],
+  "connections": [
+    [ "esp:GND", "rgb1:C", "black", [ "v0" ] ],
+    [ "esp:GND", "pot1:GND", "black", [ "v0" ] ],
+    [ "esp:GND", "mq1:GND", "black", [ "v0" ] ],
+    [ "esp:GND", "dht1:GND", "black", [ "v0" ] ],
+    [ "esp:3V3", "pot1:VCC", "red", [ "v0" ] ],
+    [ "esp:3V3", "mq1:VCC", "red", [ "v0" ] ],
+    [ "esp:3V3", "dht1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "bz1:1", "black", [ "v0" ] ],
+    [ "esp:D17", "bz1:2", "green", [ "h0" ] ],
+    [ "esp:D18", "r1:1", "green", [ "h0" ] ],
+    [ "esp:D19", "r2:1", "green", [ "h0" ] ],
+    [ "esp:D21", "r3:1", "green", [ "h0" ] ],
+    [ "r1:2", "rgb1:R", "red", [ "v0" ] ],
+    [ "r2:2", "rgb1:G", "green", [ "v0" ] ],
+    [ "r3:2", "rgb1:B", "blue", [ "v0" ] ],
+    [ "esp:D22", "dht1:SDA", "cyan", [ "h0" ] ],
+    [ "esp:D35", "mq1:A0", "orange", [ "h0" ] ],
+    [ "esp:D34", "pot1:SIG", "magenta", [ "h0" ] ]
+  ],
+  "dependencies": {}
 }
-```
-
-`"version"` is always 1, `"author"` is the name of the person who created the
-file, and `"editor"` is the name of the application that was used to edit the
-file ("wokwi").
-
-In addition, you can add a `"serialMonitor"` section to [configure the Serial Monitor](guides/serial-monitor#configuring-the-serial-monitor).
-
-## Parts
-
-The `"parts"` section defines the list of components in the simulation.
-It's an array of objects with the following properties:
-
-| Name   | Type    | Description                                     |
-| ------ | ------- | ----------------------------------------------- |
-| id     | string  | the unique identifier of the part (e.g. "led1") |
-| type   | string  | the type of the part (e.g. "wokwi-led")         |
-| left   | number  | x screen coordinate (in pixels)                 |
-| top    | number  | y screen coordinate (in pixels)                 |
-| attrs  | object  | part attributes (e.g. "color" for wokwi-led)    |
-| rotate | number  | rotation in degress (e.g. 90)                   |
-| hide   | boolean | if true, the part won't be visible              |
-
-`id` and `type` are required, the other fields are optional.
-
-For example, here's how you define a red LED called `"led1"` at position (x=100, y=50):
-
-```json
-{
-  "id": "led1",
-  "type": "wokwi-led",
-  "left": 100,
-  "top": 50,
-  "attrs": {
-    "color": "red"
-  }
-}
-```
-
-:::warning
-Each part must have a unique "id" property. If two parts have the same "id",
-the simulation may not function correctly.
-:::
-
-A partial list of part types (e.g. [wokwi-led](parts/wokwi-led)) can be found under the "Diagram Reference" section of this guide. We're currently working to expand this list. Meanwhile, some of the parts are also documented at [Wokwi Elements](https://elements.wokwi.com).
-
-If your simulation project contains code, the diagram should include a microcontroller part that will execute your code. The following microcontrollers are currently supported:
-
-- [`wokwi-attiny85`](parts/wokwi-attiny85) - ATtiny85
-- [`wokwi-arduino-nano`](parts/wokwi-arduino-nano) - Arduino Nano
-- [`wokwi-arduino-mega`](parts/wokwi-arduino-mega) - Arduino Mega 2560
-- [`wokwi-arduino-uno`](parts/wokwi-arduino-uno) - Arduino Uno R3
-- [`wokwi-pi-pico`](parts/wokwi-pi-pico) - Raspberry Pi Pico
-- `board-esp32-devkit-c-v4` - ESP32 (official devkit)
-- `wokwi-esp32-devkit-v1` - ESP32 (unofficial devkit)
-- `board-esp32-c3-devkitm-1` - ESP32-C3
-- `board-esp32-c3-rust-1` - ESP32-C3
-- `board-esp32-c6-devkitc-1` - ESP32-C6
-- `board-esp32-h2-devkitm-1` - ESP32-H2
-- `board-esp32-s2-devkitm-1` - ESP32-S2
-- [`board-franzininho-wifi`](parts/board-franzininho-wifi) - ESP32-S2
-- `board-esp32-s3-devkitc-1` - ESP32-S3
-- `board-esp32-p4-preview` - ESP32-P4
-- [`board-st-nucleo-c031c6`](parts/board-st-nucleo-c031c6) - STM32 Nucleo-64 with STM32C031C6 MCU
-- [`board-st-nucleo-l031k6`](parts/board-st-nucleo-l031k6) - STM32 Nucleo-32 with STM32L031K6 MCU
-- `board-xiao-esp32-c3` - ESP32-C3
-- `board-xiao-esp32-c6` - ESP32-C6
-- `board-xiao-esp32-s3` - ESP32-S3
-
-:::tip
-Instead of manually specifying the left/top coordinates for each item, you
-can drag them with the mouse to the desired position.
-:::
-
-## Connections
-
-The `"connections"` section defines how the parts are connected. Each connection is an array with four
-items:
-
-- The source component id and pin name, separated by a colon. e.g. `partId:pinName`
-- The target component id and pin name
-- The color of the wire (or an empty string to hide the wire)
-- A list of instructions how to place the wire, as an array of strings (optional)
-
-For example, the following definition will connect the A (anode) pin of `led1`
-to pin 13 of the `uno` part:
-
-```json
-  ["led1:A", "uno:13", "green", []],
-```
-
-You can find the name of a component pin by moving the mouse over it.
-
-### Wire placement mini-language
-
-Each item in the `"connections"` section can specify a list of instructions
-how to draw the lines for the wire. Wires always go in straight lines, either
-horizontally or vertically, and never diagonally.
-
-There are three instructions:
-
-- "v" followed by a number of pixels: move vertically (up/down)
-- "h" followed by a number of pixels: move horizontally (left/right)
-- "\*" can appear only once. All the instructions that appear before the "\*"
-  apply to the source pin, and the instructions that appear after it apply
-  to the target pins.
-
-For example:
-
-```json
-["v10", "h5", "*", "v-15", "h10"]
-```
-
-The "v10" will move 10 pixels down from the source pin, then "h5" will move
-five pixels the right.
-
-The instructions that appear after the "\*" are applied in reverse order: "h10" will
-move 10 pixels right of the target pin, then "v-15" will move 15 pixels up.
-
-Finally, the simulator will connect the two ends of the wire with a combination
-of horizontal and a vertical wire that cover the remaining distance, as necessary.
-
-### Wire placement animation
-
-If you are a visual learner, you may find the following GIF animation useful.
-The animation was created by Steve Sigma.
-
-![diagram.json wire placement mini language](diagram-format-connections.gif)
